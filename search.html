@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mondal Search</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --text: #333;
+            --text-light: #fff;
+            --accent: #4a90e2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--primary-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            flex-direction: column;
+        }
+
+        .aurora {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                rgba(74, 144, 226, 0.1),
+                rgba(137, 89, 226, 0.1),
+                rgba(226, 89, 157, 0.1),
+                rgba(89, 226, 157, 0.1));
+            animation: auroraRotate 20s infinite linear;
+            z-index: 0;
+        }
+
+        @keyframes auroraRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-input-container {
+            display: flex;
+            background: white;
+            border-radius: 16px;
+            padding: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        #searchInput:focus {
+            outline: none;
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .search-button {
+            background: var(--accent);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .search-button:hover {
+            transform: scale(1.1);
+            background: #357abd;
+        }
+
+        .search-button i {
+            font-size: 1.2rem;
+        }
+
+        .engine-selector {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        #engineButton {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #engineButton:hover {
+            transform: scale(1.1);
+        }
+
+        .engine-menu {
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
+        }
+
+        .engine-menu.active {
+            display: flex;
+        }
+
+        .engine-option {
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .engine-option:hover {
+            background: #f0f0f0;
+        }
+
+        .engine-option.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        #statusMessage {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 1000;
+        }
+
+        .url-bar {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 8px 16px;
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .url-input {
+            width: 100%;
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 1.1rem;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .url-input:focus {
+            outline: none;
+        }
+
+        @media (max-width: 480px) {
+            .search-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .search-button {
+                width: 35px;
+                height: 35px;
+            }
+
+            .engine-menu {
+                right: -10px;
+                bottom: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="aurora"></div>
+
+    <div class="search-container">
+        <h1>Mondal Search</h1>
+        <div class="search-box">
+            <div class="search-input-container">
+                <input type="text" id="searchInput" placeholder="Search anything..." autocomplete="off">
+                <div class="search-buttons">
+                    <button class="search-button" id="voiceButton" title="Voice Search">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="search-button" id="imageButton" title="Image Search">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="search-button" id="soundButton" title="Sound Search">
+                        <i class="fas fa-music"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="engine-selector">
+        <button id="engineButton">
+            <i class="fas fa-search"></i>
+        </button>
+        <div class="engine-menu" id="engineMenu">
+            <!-- Engine options will be added by JavaScript -->
+        </div>
+    </div>
+
+    <div class="url-bar">
+        <input type="text" class="url-input" id="urlInput" placeholder="Enter URL here..." autocomplete="off">
+    </div>
+
+    <div id="statusMessage"></div>
+
+    <script>
+        // Search engine configurations
+        const engines = {
+            duckduckgo: {
+                name: 'DuckDuckGo',
+                icon: 'fas fa-feather-alt',
+                url: 'https://duckduckgo.com/',
+                param: 'q',
+                imageUrl: 'https://duckduckgo.com/?q={q}&ia=images&iax=images'
+            },
+            google: {
+                name: 'Google',
+                icon: 'fab fa-google',
+                url: 'https://www.google.com/search',
+                param: 'q',
+                imageUrl: 'https://www.google.com/search?q={q}&tbm=isch'
+            },
+            bing: {
+                name: 'Bing',
+                icon: 'fab fa-microsoft',
+                url: 'https://www.bing.com/search',
+                param: 'q',
+                imageUrl: 'https://www.bing.com/images/search?q={q}'
+            },
+            brave: {
+                name: 'Brave',
+                icon: 'fas fa-shield-alt',
+                url: 'https://search.brave.com/search',
+                param: 'q'
+            },
+            ecosia: {
+                name: 'Ecosia',
+                icon: 'fas fa-leaf',
+                url: 'https://www.ecosia.org/search',
+                param: 'q'
+            },
+            perplexity: {
+                name: 'Perplexity',
+                icon: 'fas fa-brain',
+                url: 'https://www.perplexity.ai/search',
+                param: 'q'
+            },
+            swisscows: {
+                name: 'Swisscows',
+                icon: 'fas fa-chess-knight',
+                url: 'https://swisscows.com/web',
+                param: 'query'
+            },
+            yahoo: {
+                name: 'Yahoo',
+                icon: 'fab fa-yahoo',
+                url: 'https://search.yahoo.com/search',
+                param: 'p'
+            },
+            yandex: {
+                name: 'Yandex',
+                icon: 'fas fa-globe',
+                url: 'https://yandex.com/search',
+                param: 'text'
+            },
+            mojeek: {
+                name: 'Mojeek',
+                icon: 'fas fa-tree',
+                url: 'https://www.mojeek.com/search',
+                param: 'q'
+            },
+            startpage: {
+                name: 'Startpage',
+                icon: 'fas fa-lock',
+                url: 'https://www.startpage.com/sp/search',
+                param: 'query'
+            },
+            youtube: {
+                name: 'YouTube',
+                icon: 'fab fa-youtube',
+                url: 'https://www.youtube.com/results',
+                param: 'search_query'
+            },
+            wikipedia: {
+                name: 'wikipedia',
+                icon: 'fab fa-wikipedia-w',
+                url: 'https://en.wikipedia.org/wiki/',
+                param: 'search'
+            }
+        };
+
+        // Global variables
+        let currentEngine = 'duckduckgo';
+        let recognition = null;
+
+        // Initialize the page
+        function init() {
+            setupEngineMenu();
+            setupEventListeners();
+            updateEngineButton();
+        }
+
+        // Setup engine menu
+        function setupEngineMenu() {
+            const menu = document.getElementById('engineMenu');
+            menu.innerHTML = Object.entries(engines).map(([key, engine]) => `
+                <div class="engine-option ${key === currentEngine ? 'active' : ''}" data-engine="${key}">
+                    <i class="${engine.icon}"></i>
+                    <span>${engine.name}</span>
+                </div>
+            `).join('');
+
+            menu.addEventListener('click', (e) => {
+                const option = e.target.closest('.engine-option');
+                if (option) {
+                    setEngine(option.dataset.engine);
+                    toggleEngineMenu();
+                }
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('engineButton').addEventListener('click', toggleEngineMenu);
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+            document.getElementById('voiceButton').addEventListener('click', toggleVoiceSearch);
+            document.getElementById('imageButton').addEventListener('click', performImageSearch);
+            document.getElementById('soundButton').addEventListener('click', performSoundSearch);
+
+            // Close engine menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.engine-selector')) {
+                    document.getElementById('engineMenu').classList.remove('active');
+                }
+            });
+        }
+
+        // Toggle engine menu
+        function toggleEngineMenu() {
+            document.getElementById('engineMenu').classList.toggle('active');
+        }
+
+        // Set search engine
+        function setEngine(engine) {
+            currentEngine = engine;
+            updateEngineButton();
+            document.querySelectorAll('.engine-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.engine === engine);
+            });
+        }
+
+        // Update engine button
+        function updateEngineButton() {
+            const button = document.getElementById('engineButton');
+            button.innerHTML = `<i class="${engines[currentEngine].icon}"></i>`;
+        }
+
+        // Perform a search
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                const engine = engines[currentEngine];
+                const url = `${engine.url}?${engine.param}=${encodeURIComponent(query)}`;
+                window.location.href = url;
+            }
+        }
+
+        // Perform image search
+        function performImageSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                const engine = engines[currentEngine];
+                const imageUrl = engine.imageUrl ? engine.imageUrl.replace('{q}', encodeURIComponent(query)) : '';
+                window.location.href = imageUrl;
+            }
+        }
+
+        // Perform sound search
+        function performSoundSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                const engine = engines[currentEngine];
+                const url = `${engine.url}?${engine.param}=${encodeURIComponent(query)}`;
+                window.location.href = url;
+            }
+        }
+
+        // Toggle voice search
+        function toggleVoiceSearch() {
+            if (recognition) {
+                recognition.stop();
+            }
+
+            if (!recognition) {
+                if (!('webkitSpeechRecognition' in window)) {
+                    alert('Voice recognition not supported.');
+                    return;
+                }
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = (e) => {
+                    const transcript = e.results[0][0].transcript;
+                    document.getElementById('searchInput').value = transcript;
+                    performSearch();
+                };
+
+                recognition.onerror = () => alert('Error with voice recognition.');
+
+                recognition.start();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
+<script>
+    // Existing initialization functions
+
+    // Function to navigate to the entered URL
+    function navigateToURL() {
+        const url = document.getElementById('urlInput').value.trim();
+        // Validate if the entered text is a valid URL
+        if (url) {
+            // If the entered URL does not start with "http://" or "https://", add "https://"
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                window.location.href = 'https://' + url;
+            } else {
+                window.location.href = url;
+            }
+        }
+    }
+
+    // Setup event listener for URL input field to navigate on pressing "Enter"
+    document.getElementById('urlInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            navigateToURL();
+        }
+    });
+</script>
